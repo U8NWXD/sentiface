@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 
 def identify_faces(embeddings):
-    clustering = DBSCAN(min_samples=15).fit(embeddings)
+    clustering = DBSCAN().fit(embeddings)
     return clustering.labels_
 
 def load_embeddings(filepath):
@@ -48,6 +48,14 @@ def show_faces(video_filepath, matches, faces_data):
                 plt.imshow(crop)
                 plt.show()
 
+def label_persons(embeddings, frame_data, output_filepath=None):
+    labels = identify_faces(embeddings)
+    matches = match_labels(labels, frame_data.shape[0])
+    frame_data['person'] = labels
+    if output_filepath is not None:
+        frame_data.to_csv(output_filepath, index=False)
+    return frame_data
+
 def main():
     # embeddings_filepath = 'embeddings.npy'
     embeddings_filepath = 'reactionvideo_embeddings.npy'
@@ -66,7 +74,7 @@ def main():
 
     faces_info['person'] = labels
 
-    faces_info.to_csv('reactionvideo_identified.csv')
+    faces_info.to_csv('reactionvideo_identified.csv', index=False)
     print(faces_info.head())
 
     # video_dir = '/Users/Tomas/Downloads/'
