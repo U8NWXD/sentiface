@@ -20,8 +20,6 @@ function ExecutingPythonModal(props) {
     return (
         <Modal
             show={props.show}
-            // TODO: Remove the line below?
-            //onHide={props.onHide}
             size="lg"
             aria-labelledby="contained-modal-title-vcenter"
             centered
@@ -93,8 +91,14 @@ class RunPython extends React.Component {
     }
 }
 
+/*
+ * props:
+ * * data: The data to display, in the form [{x: val, y: val} ...]
+ * * height: In pixels. default is 300
+ * * width: In pixels. default is 300
+ * * x_labels: In order of the data. Default is indices.
+ */
 function BarPlot(props) {
-    console.log(props);
     const data = props.data
     const height = props.height ? props.height : 300;
     const width = props.width ? props.width : 300;
@@ -116,20 +120,30 @@ class VisualizeData extends React.Component {
         super(props);
         this.state = {
             data: null,
-            path: null,
         };
-        this.state.path = "../sotu.csv";
     }
 
-    loadData(path) {
-        if (!path) {
-            alert("No data file selected.");
-        }
-        d3.csv(path).then((loaded) => this.setState({data: loaded}));
+    loadData() {
+        const { dialog } = require('electron').remote;
+        let selected_file = dialog.showOpenDialog({
+            properties: ["openfile"],
+            title: "Select Data File",
+            defaultPath: "~",
+            buttonLabel: "Load",
+            filters: [
+                { name: "Data Files", extensions: ["csv"]},
+            ],
+        }, (selected_file) => {
+            if (selected_file == undefined) {
+                return
+            }
+            d3.csv(selected_file).then((loaded) => this.setState({data: loaded}));
+        });
     }
 
     render() {
         if (this.state.data) {
+            console.log(this.state.data);
             let emotions = ["anger", "contempt", "disgust", "fear", "happiness",
                 "sadness", "smile", "surprise"];
             let toDisplay = [];
@@ -144,14 +158,13 @@ class VisualizeData extends React.Component {
                         .reduce(sumCallback, 0.0),
                 }
             }
-            console.log(toDisplay);
             return (
                 <BarPlot data={toDisplay} height={400} width={400} x_labels={emotions}/>
             );
         } else {
             return ( 
                 <Button variant="primary" onClick={() => 
-                    this.loadData(this.state.path)}>Load Data</Button>
+                    this.loadData()}>Load Data</Button>
             );
         }
     }
@@ -173,14 +186,15 @@ export default class App extends React.Component {
             defaultPath: "~",
             buttonLabel: "Analyze",
             filters: [
-                { name: "TESTING", extensions: ["*"]},
                 { name: "Movies", extensions: ["avi", "mp4"]},
             ],
         });
+        if (selected_files == undefined) {
+            return
+        }
         this.setState({
-            paths: selected_files,
+            paths: selected_files[0],
         });
-        return selected_files;
     }
 
     analyze() {
@@ -196,7 +210,7 @@ export default class App extends React.Component {
         let files = "No Files Selected";
         
         if (this.state.paths) { 
-            files = this.state.paths.map((path) => {
+            files = [this.state.paths].map((path) => {
                 return(
                     <ListGroup.Item key={path}>{path}</ListGroup.Item>
                 );
@@ -222,7 +236,7 @@ export default class App extends React.Component {
                 <Row className="justify-content-md-center">
                     <Col>
                         <RunPython python_args={
-                            ['./src/dummy.py'].concat(this.state.paths)
+                            ['./sentiface.py', '-I ' + this.state.paths]
                         } />
                     </Col>
                     <Col>
