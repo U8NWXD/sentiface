@@ -4,16 +4,63 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import ListGroup from 'react-bootstrap/ListGroup';
+import Modal from 'react-bootstrap/Modal';
+import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
+import Badge from 'react-bootstrap/Badge';
+import * as d3 from 'd3';
+
+/*
+ * props:
+ * * show: boolean for whether to display modal
+ * * onHide: callback to execute when modal closed
+ * * body: text to display as the body
+ */
+function ExecutingPythonModal(props) {
+    return (
+        <Modal
+            show={props.show}
+            // TODO: Remove the line below?
+            //onHide={props.onHide}
+            size="lg"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+        >
+            <Modal.Header closeButton>
+                <Modal.Title id="contained-modal-title-vcenter">
+                    Analysis Results
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                {props.body}
+            </Modal.Body>
+            <Modal.Footer>
+                <Button 
+                    variant="primary" onClick={props.onHide}
+                >Close</Button>
+            </Modal.Footer>
+        </Modal>
+    );
+}
 
 class RunPython extends React.Component {
+    /*
+     * props:
+     * * python_args: Array of arguments to pass to the python3 call
+     */
     constructor(props) {
         super(props);
+
         this.state = {
             output: "Awaiting output from Python ... ",
+            modalShow: false,
+            python_args: props.python_args
         };
-        
+    }
+
+    executePython() {
         // SOURCE: https://www.techiediaries.com/python-electron-tutorial/
-        var python = require('child_process').spawn('python3', ['./src/dummy.py']);
+        var python = require('child_process').spawn(
+            'python3', this.state.python_args);
         python.stdout.on('data', (data) =>  {
             this.setState({
                 output: data.toString('utf8'),
@@ -21,8 +68,27 @@ class RunPython extends React.Component {
         });
     }
 
+    handleClick() {
+        this.setState({ modalShow: true });
+        this.executePython();
+    }
+
     render() {
-        return (<div>{this.state.output}</div>);
+        let modalClose = () => this.setState({ modalShow: false })
+        return (
+            <ButtonToolbar>
+            <Button
+                variant="primary"
+                onClick={() => this.handleClick()}
+            >Analyze</Button>
+
+            <ExecutingPythonModal
+                show={this.state.modalShow}
+                onHide={modalClose}
+                body={this.state.output}
+            />
+            </ButtonToolbar>
+        );
     }
 }
 
@@ -67,7 +133,7 @@ export default class App extends React.Component {
         if (this.state.paths) { 
             files = this.state.paths.map((path) => {
                 return(
-                    <ListGroup.Item>{path}</ListGroup.Item>
+                    <ListGroup.Item key={path}>{path}</ListGroup.Item>
                 );
             });
         }
@@ -81,21 +147,34 @@ export default class App extends React.Component {
               crossOrigin="anonymous"
             />
             <Container>
-                <h3>Output from Python:</h3>
-                <RunPython />
+                <Row className="justify-content-md-center">
+                    <h2>
+                        <Badge variant="secondary">
+                            Sentiface Sentiment Analyzer
+                        </Badge>
+                    </h2>
+                </Row>
                 <Row className="justify-content-md-center">
                     <Col>
-                        <Button variant="primary" onClick={() => 
-                            this.analyze()}>Analyze Files</Button> 
+                        <RunPython python_args={
+                            ['./src/dummy.py'].concat(this.state.paths)
+                        } />
                     </Col>
                     <Col>
                         <Button variant="primary" onClick={() => 
                             this.selectFiles()}>Select Files</Button>
                     </Col>
                 </Row>
+                <Row>
+                    <h3>Selected Files:</h3>
+                </Row>
+                <Row>
+                    <ListGroup>{files}</ListGroup>
+                </Row>
+                <Row>
+                    <VisualizeData />
+                </Row>
             </Container>
-                <h3>Selected Files:</h3>
-                <ListGroup>{files}</ListGroup>
             </div>
         );
     }
