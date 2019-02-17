@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 import numpy as np
 import pandas as pd
@@ -26,14 +27,19 @@ def match_labels(labels, num_faces):
 
 def show_faces(video_filepath, matches, faces_data):
     cap = cv2.VideoCapture(video_filepath)
+    count = 0
     for label in matches.keys():
         if label == -1:
             continue
         print("Class : {}".format(label))
         for face in matches[label]:
+            count += 1
+            if count > 4:
+                count = 0
+                break
             row = faces_data.iloc[face]
             x, y, w, h = row['x'], row['y'], row['w'], row['h']
-            frame = row['frame'] - 1000
+            frame = row['frame'] - 24
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
             ret, img = cap.read()
             if ret:
@@ -42,20 +48,31 @@ def show_faces(video_filepath, matches, faces_data):
                 plt.imshow(crop)
                 plt.show()
 
-
 def main():
-    embeddings_filepath = 'embeddings.npy'
+    # embeddings_filepath = 'embeddings.npy'
+    embeddings_filepath = 'reactionvideo_embeddings.npy'
+
     embeddings = load_embeddings(embeddings_filepath)
     embeddings = embeddings.reshape(embeddings.shape[0], embeddings.shape[2])
-    faces_filepath = 'sotu.csv' 
+    # faces_filepath = 'sotu.csv' 
+    faces_filepath = 'reactionvideo.csv'
     faces_info = load_face_info(faces_filepath)
-    
+    faces_info = faces_info.drop(['Unnamed: 0'], axis=1)
+     
     labels = identify_faces(embeddings)
+    print(Counter(labels))    
 
     matches = match_labels(labels, faces_info.shape[0])
 
-    video_file = '/Users/Tomas/Downloads/sotu.mp4'
-    show_faces(video_file, matches, faces_info)
+    faces_info['person'] = labels
+
+    faces_info.to_csv('reactionvideo_identified.csv')
+    print(faces_info.head())
+
+    # video_dir = '/Users/Tomas/Downloads/'
+    # video_file = '/Users/Tomas/Downloads/sotu.mp4'
+    # video_file = 'reactionvideo.mp4'
+    # show_faces(os.path.join(video_dir, video_file), matches, faces_info)
     
 if __name__ == '__main__':
     main()
