@@ -1,4 +1,9 @@
 import React from 'react';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Button from 'react-bootstrap/Button';
+import ListGroup from 'react-bootstrap/ListGroup';
 
 class RunPython extends React.Component {
     constructor(props) {
@@ -37,8 +42,8 @@ export default class App extends React.Component {
             defaultPath: "~",
             buttonLabel: "Analyze",
             filters: [
-                { name: "Movies", extensions: ["avi", "mp4"]},
                 { name: "TESTING", extensions: ["*"]},
+                { name: "Movies", extensions: ["avi", "mp4"]},
             ],
         });
         this.setState({
@@ -62,21 +67,35 @@ export default class App extends React.Component {
         if (this.state.paths) { 
             files = this.state.paths.map((path) => {
                 return(
-                    <li key={path}>{path}</li>
+                    <ListGroup.Item>{path}</ListGroup.Item>
                 );
             });
         }
         
         return (
             <div>
-                <h2>Welcome to React!</h2>
-                
+            <link
+              rel="stylesheet"
+              href="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+              integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+              crossOrigin="anonymous"
+            />
+            <Container>
                 <h3>Output from Python:</h3>
                 <RunPython />
-                <button onClick={() => this.analyze()}>Analyze Files</button> 
+                <Row className="justify-content-md-center">
+                    <Col>
+                        <Button variant="primary" onClick={() => 
+                            this.analyze()}>Analyze Files</Button> 
+                    </Col>
+                    <Col>
+                        <Button variant="primary" onClick={() => 
+                            this.selectFiles()}>Select Files</Button>
+                    </Col>
+                </Row>
+            </Container>
                 <h3>Selected Files:</h3>
-                <button onClick={() => this.selectFiles()}>Select Files</button>
-                <div>{files}</div>
+                <ListGroup>{files}</ListGroup>
             </div>
         );
     }
