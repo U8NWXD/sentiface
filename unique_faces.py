@@ -53,7 +53,7 @@ def label_persons(embeddings, frame_data, output_filepath=None):
     matches = match_labels(labels, frame_data.shape[0])
     frame_data['person'] = labels
     if output_filepath is not None:
-        frame_data.to_csv(output_filepath, index=False)
+        frame_data.to_csv(os.path.basename(output_filepath), index=False)
     return frame_data
 
 def main():
@@ -62,13 +62,13 @@ def main():
 
     embeddings = load_embeddings(embeddings_filepath)
     embeddings = embeddings.reshape(embeddings.shape[0], embeddings.shape[2])
-    # faces_filepath = 'sotu.csv' 
+    # faces_filepath = 'sotu.csv'
     faces_filepath = 'reactionvideo.csv'
     faces_info = load_face_info(faces_filepath)
     faces_info = faces_info.drop(['Unnamed: 0'], axis=1)
-     
+
     labels = identify_faces(embeddings)
-    print(Counter(labels))    
+    print(Counter(labels))
 
     matches = match_labels(labels, faces_info.shape[0])
 
@@ -81,6 +81,6 @@ def main():
     # video_file = '/Users/Tomas/Downloads/sotu.mp4'
     # video_file = 'reactionvideo.mp4'
     # show_faces(os.path.join(video_dir, video_file), matches, faces_info)
-    
+
 if __name__ == '__main__':
     main()
