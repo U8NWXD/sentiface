@@ -1,3 +1,7 @@
 node_modules
 out
 .eslintcache
+venv/
+*__pycache__*
+*.pyc
+*\#
